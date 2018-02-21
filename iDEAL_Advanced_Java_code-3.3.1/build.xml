@@ -1,0 +1,113 @@
+<project name="ING-iDEAL" default="all" basedir=".">
+
+    <property environment="env"/>
+
+    <property name="lib.name" value="ing-iac"/>
+    <property name="dist.name" value="iDEAL_Advanced_Java_code"/>
+    <property name="app.version" value="3.3.1"/>
+    <property name="build.home" value="${basedir}/build"/>
+
+    <property name="src.home" value="${basedir}/src"/>
+    <property name="application.lib.home" value="${basedir}/lib"/>
+
+
+    <target name="clean" description="Delete old build directories">
+        <delete dir="${build.home}"/>
+    </target>
+
+    <target name="build" depends="compile" description="Create binary distribution">
+        <!-- Create application JAR/WAR file -->
+        <jar destfile="${build.home}/${lib.name}-${app.version}.jar" basedir="${build.home}/classes"/>
+    </target>
+
+    <target name="compile" description="Compile Java sources">
+        <!-- Compile Java classes as necessary -->
+        <mkdir dir="${build.home}/classes"/>
+        <javac srcdir="${src.home}"
+               destdir="${build.home}/classes"
+               debug="${compile.debug}"
+               deprecation="${compile.deprecation}"
+               optimize="${compile.optimize}" includeantruntime="false">
+            <classpath refid="compile.classpath"/>
+            <compilerarg value="-Djava.endorsed.dirs=${application.lib.home}"/>
+        </javac>
+
+        <copy todir="${build.home}/classes">
+            <fileset dir="${src.home}" excludes="**/*.java"/>
+        </copy>
+    </target>
+
+    <path id="compile.classpath">
+        <!-- Application Libraries -->
+        <fileset dir="${application.lib.home}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+
+    <target name="doc" description="generate documentation">
+        <delete dir="${build.home}/doc"/>
+        <mkdir dir="${build.home}/doc"/>
+        <!--<javadoc sourcepath="${src.home}" destdir="${build.home}/doc"/>-->
+        <javadoc destdir="${build.home}/doc">
+            <fileset dir="src" defaultexcludes="yes">
+                <include name="com/ing/ideal/connector/*.java"/>
+            </fileset>
+        </javadoc>
+        <jar destfile="${build.home}/${lib.name}-${app.version}-javadoc.jar" basedir="${build.home}/doc"/>
+    </target>
+
+    <target name="sources" description="generate sources">
+        <jar destfile="${build.home}/${lib.name}-${app.version}-sources.jar" basedir="${src.home}"/>
+    </target>
+
+
+    <target name="all-jar" depends="build,doc"
+            description="Creates a jar that also includes the dependencies and sources.">
+        <jar destfile="${build.home}/${lib.name}-${app.version}-including-deps.jar">
+            <fileset dir="${build.home}/doc"/>
+            <fileset dir="${basedir}/src"/>
+            <fileset dir="${build.home}/classes"/>
+            <zipgroupfileset includes="**/*.jar" dir="${basedir}/lib"/>
+        </jar>
+    </target>
+
+    <!--Creates the dist zip-->
+    <target name="dist" depends="build,doc,sources" description="Creates the dist zip">
+        <mkdir dir="${build.home}/dist"/>
+        <mkdir dir="${build.home}/dist/lib"/>
+        <copy todir="${build.home}/dist" file="${build.home}/${lib.name}-${app.version}.jar"/>
+        <copy todir="${build.home}/dist" file="${build.home}/${lib.name}-${app.version}-javadoc.jar"/>
+        <!--<copy todir="${build.home}/dist" file="${build.home}/${lib.name}-${app.version}-sources.jar"/>-->
+
+        <copy todir="${build.home}/dist/lib">
+            <fileset file="${basedir}/lib/**.jar"/>
+        </copy>
+
+        <mkdir dir="${build.home}/dist/bin"/>
+        <copy todir="${build.home}/dist/bin/">
+            <fileset dir="${basedir}/dist/bin/" includes="**"/>
+            <filterset>
+                <filter token="JAR_NAME" value="${lib.name}-${app.version}.jar"/>
+            </filterset>
+        </copy>
+        <copy todir="${build.home}/dist/">
+            <fileset dir="${basedir}/dist/" excludes="**/bin/**"/>
+        </copy>
+
+        <mkdir dir="${build.home}/dist/doc/api"/>
+        <copy todir="${build.home}/dist/doc/api">
+            <fileset dir="${build.home}/doc"/>
+        </copy>
+        <zip destfile="${build.home}/${dist.name}-${app.version}.zip" basedir="${build.home}/dist"/>
+    </target>
+
+    <target name="zip-src" description="Creates a zip with the source code">
+        <zip destfile="${build.home}/${dist.name}-${app.version}-source-code.zip">
+            <fileset dir="${basedir}" excludes="build/**"/>
+        </zip>
+    </target>
+
+    <target name="all" depends="clean,build,doc,sources,dist,zip-src" description="Clean and build artifacts"/>
+
+</project>

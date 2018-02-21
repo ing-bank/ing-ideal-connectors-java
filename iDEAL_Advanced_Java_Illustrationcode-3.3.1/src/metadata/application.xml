@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE application PUBLIC "-//Sun Microsystems, Inc.//DTD J2EE Application 1.3//EN" "http://java.sun.com/dtd/application_1_3.dtd">
+
+<!--File used for constructing the ear archive.-->
+
+<application id="Application_ID">
+	<display-name>iDEAL Integration API Test</display-name>
+	<module>
+		<web>
+			<web-uri>@WAR_NAME@</web-uri>
+			<context-root>iDealTest</context-root>
+		</web>
+	</module>
+</application>

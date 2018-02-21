@@ -1,0 +1,119 @@
+<project name="iDEAL_Java_Ilustration" basedir="." default="all">
+
+    <property environment="env"/>
+
+    <property name="app.version" value="3.3.1"/>
+    <property name="app.name" value="iDEAL_Java_Illustration"/>
+    <property name="dist.name" value="iDEAL_Advanced_Java_Illustrationcode"/>
+    <property name="ear.name" value="iDEAL Integration API Test.ear"/>
+    <property name="war.name" value="iDEAL_Integration_API_v${app.version}_Test_Web.war"/>
+    <property name="war-extra.name" value="iDEAL_Integration_API_v${app.version}_Test_Web-working.war"/>
+    <property name="build.home" value="${basedir}/build"/>
+    <property name="build.exploded" value="${basedir}/build/exploded"/>
+    <property name="build.dist" value="${basedir}/build/dist"/>
+    <property name="catalina.home" value="${env.CATALINA_HOME}"/>
+    <!-- UPDATE THIS as per your installation ! -->
+    <property name="dist.home" value="${basedir}/dist"/>
+
+    <property name="src.home" value="${basedir}/src/java"/>
+    <property name="res.home" value="${basedir}/src/resources"/>
+    <property name="res-extra.home" value="${basedir}/src/resources-extra"/>
+    <property name="web.home" value="${basedir}/web"/>
+    <property name="application.lib.home" value="${basedir}/lib"/>
+
+    <target name="clean" description="Delete old build and dist directories">
+        <delete dir="${build.home}"/>
+        <delete dir="${dist.home}"/>
+    </target>
+
+    <target name="prepare">
+        <!-- Create staging directories as needed -->
+        <mkdir dir="${build.exploded}"/>
+        <mkdir dir="${build.exploded}/WEB-INF"/>
+        <mkdir dir="${build.exploded}/WEB-INF/classes"/>
+
+        <!-- Copy static content, jsps and web.xml  of this web application -->
+        <copy todir="${build.exploded}">
+            <fileset dir="${web.home}"/>
+        </copy>
+
+        <!-- Copy external dependencies as required -->
+        <mkdir dir="${build.exploded}/WEB-INF/lib"/>
+
+        <!-- copy application libraries to WEB-INF/lib folder -->
+        <copy todir="${build.exploded}/WEB-INF/lib">
+            <fileset dir="${application.lib.home}" includes="*.jar"/>
+        </copy>
+    </target>
+
+    <target name="build" depends="clean,compile" description="Create binary distribution">
+        <!-- Create application JAR/WAR file -->
+        <war jarfile="${build.home}/${war.name}" basedir="${build.exploded}"/>
+    </target>
+
+    <target name="extra-war" depends="build">
+        <copy todir="${build.exploded}/WEB-INF/classes" overwrite="true">
+            <fileset dir="${res.home}" excludes="**/*.java"/>
+        </copy>
+        <war jarfile="${build.home}/${war-extra.name}" basedir="${build.exploded}"/>
+    </target>
+
+    <path id="compile.classpath">
+        <!-- Tomcat Libraries
+        <fileset dir="${catalina.home}/lib">
+            <include name="*.jar"/>
+        </fileset>
+         Application Libraries -->
+        <fileset dir="${application.lib.home}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="compile" depends="prepare" description="Compile Java sources">
+        <!-- Compile Java classes as necessary -->
+        <mkdir dir="${build.exploded}/WEB-INF/classes"/>
+        <javac srcdir="${src.home}"
+               destdir="${build.exploded}/WEB-INF/classes"
+               debug="${compile.debug}"
+               deprecation="${compile.deprecation}"
+               optimize="${compile.optimize}" includeantruntime="false">
+            <classpath refid="compile.classpath"/>
+        </javac>
+
+        <!-- Copy application resources -->
+        <copy todir="${build.exploded}/WEB-INF/classes">
+            <fileset dir="${res.home}" excludes="**/*.java"/>
+        </copy>
+    </target>
+
+    <target name="ear" depends="build" description="Creates an ear archive of the application.">
+        <mkdir dir="${build.home}/ear"/>
+        <copy todir="${build.home}/ear" file="${basedir}/src/metadata/application.xml">
+            <filterset>
+                <filter token="WAR_NAME" value="${war.name}"/>
+            </filterset>
+        </copy>
+        <ear destfile="${build.home}/${ear.name}" appxml="${build.home}/ear/application.xml">
+            <fileset dir="${build.home}" includes="*.war"/>
+        </ear>
+    </target>
+
+    <target name="zip-src" description="Creates a zip with the source code">
+        <zip destfile="${build.home}/${dist.name}-${app.version}-source-code.zip">
+            <fileset dir="${basedir}" excludes="build/**,src/resources-extra/**"/>
+        </zip>
+    </target>
+
+    <target name="zip-src-all" description="Creates a zip with the source code">
+        <zip destfile="${build.home}/${dist.name}-${app.version}-source-code-all-test.zip">
+            <fileset dir="${basedir}" excludes="build/**"/>
+        </zip>
+    </target>
+
+    <target name="dist" depends="build,ear" description="Creates the war and ear archives.">
+        <zip destfile="${build.home}/${dist.name}.zip" basedir="${build.home}" includes="*.ear *.war" excludes="**/${war-extra.name}"/>
+    </target>
+
+    <target name="all" depends="clean,dist,extra-war,zip-src,zip-src-all" description="Clean build and dist directories, then compile."/>
+
+</project>
