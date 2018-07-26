@@ -4,8 +4,8 @@ import com.ing.ideal.connector.binding.*;
 import com.ing.ideal.connector.crypto.IDigitalSignatureHelper;
 import com.ing.ideal.connector.serializer.ISerializer;
 import com.ing.ideal.connector.util.*;
-import com.sun.org.apache.xerces.internal.jaxp.datatype.XMLGregorianCalendarImpl;
 import org.xml.sax.SAXException;
+import org.apache.xerces.jaxp.datatype.DatatypeFactoryImpl;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -54,13 +54,11 @@ class InterfaceAcceptantAcquirer_v331 {
 
         if (Util.log.isDebugEnabled())
             Util.log.debug("  Generating required attributes.");
-        String createDateTimestamp = Util.createDateTimestamp();
 
         if (Util.log.isDebugEnabled())
             Util.log.debug("  Creating request object.");
         DirectoryReq req = new DirectoryReq();
-        XMLGregorianCalendar value = XMLGregorianCalendarImpl.parse(Util.encodeString(createDateTimestamp));
-        req.setCreateDateTimestamp(value);
+        req.setCreateDateTimestamp(getCreationTimestamp());
         req.setVersion(INTERFACE_SPECIFICATION_VERSION);
         DirectoryReq.Merchant merchant = new DirectoryReq.Merchant();
         merchant.setMerchantID(Util.encodeString(merchantId));
@@ -161,11 +159,10 @@ class InterfaceAcceptantAcquirer_v331 {
         ValidationHelper.validateTransactionRequestParams(transaction, merchantId, merchantSubId, privateCert);
         if (Util.log.isDebugEnabled())
             Util.log.debug("  Generating required attributes.");
-        String createDateTimestamp = Util.createDateTimestamp();
         if (Util.log.isDebugEnabled())
             Util.log.debug("  Creating request object.");
         AcquirerTrxReq req = new AcquirerTrxReq();
-        req.setCreateDateTimestamp(XMLGregorianCalendarImpl.parse(Util.encodeString(createDateTimestamp)));
+        req.setCreateDateTimestamp(getCreationTimestamp());
         req.setVersion(Util.encodeString(INTERFACE_SPECIFICATION_VERSION));
         AcquirerTrxReq.Merchant merchant = new AcquirerTrxReq.Merchant();
         merchant.setMerchantID(Util.encodeString(merchantId));
@@ -249,13 +246,12 @@ class InterfaceAcceptantAcquirer_v331 {
         ValidationHelper.validateTransactionStatusParams(transactionId, merchantId, merchantSubId, privateCert);
         if (Util.log.isDebugEnabled())
             Util.log.debug("  Generating required attributes.");
-        String createDateTimestamp = Util.createDateTimestamp();
+
         if (Util.log.isDebugEnabled())
             Util.log.debug("  Creating request object.");
         AcquirerStatusReq req = new AcquirerStatusReq();
-        XMLGregorianCalendar value = XMLGregorianCalendarImpl.parse(Util
-                .encodeString(createDateTimestamp));
-        req.setCreateDateTimestamp(value);
+
+        req.setCreateDateTimestamp(getCreationTimestamp());
         req.setVersion(Util.encodeString(INTERFACE_SPECIFICATION_VERSION));
         AcquirerStatusReq.Merchant merchant = new AcquirerStatusReq.Merchant();
         merchant.setMerchantID(Util.encodeString(merchantId));
@@ -388,5 +384,18 @@ class InterfaceAcceptantAcquirer_v331 {
         if (Util.log.isDebugEnabled())
             Util.log.debug("  Creating new validator instance for: " + INTERFACE_XML_SCHEMA);
         return schema.newValidator();
+    }
+
+    private static XMLGregorianCalendar getCreationTimestamp() {
+        try {
+            return DatatypeFactoryImpl.newInstance()
+                                      .newXMLGregorianCalendar(Util
+                                              .encodeString(Util.createDateTimestamp()));
+        } catch(Exception ex) {
+            if(Util.log.isWarnEnabled()) {
+                Util.log.warn("  Unable to parse created timestamp");
+            }
+        }
+        return null;
     }
 }
