@@ -25,7 +25,17 @@ public class Util {
     public static final String INTERFACE_ISO8601_DATETIMESTAMP = "yyyy-MM-dd'T'HH:mm:ss'.0Z'";
     private static final FastDateFormat iso8601DateFormat = FastDateFormat.getInstance(INTERFACE_ISO8601_DATETIMESTAMP, TimeZone.getTimeZone("UTC"));
 
-    public static final Log log = LogFactory.getLog("IdealConnector");
+    public static Log log = null;
+
+    static {
+        try {
+            log = LogFactory.getLog("IdealConnector");
+        } catch(Exception e) {
+            System.out.println("Logger not found: IdealConnector");
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
     public Util() {
     }
