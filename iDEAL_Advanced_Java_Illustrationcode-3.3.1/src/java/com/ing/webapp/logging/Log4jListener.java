@@ -5,26 +5,28 @@
 
 package com.ing.webapp.logging;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class Log4jListener implements ServletContextListener {
 
     private static final Logger log;
-    private Timer timer;
+    private final Timer timer;
     private long lastConfigure;
     private File location;
-    private String defaultLocation;
 
     static {
-        log = Logger.getLogger(com.ing.webapp.logging.Log4jListener.class);
+        log = LogManager.getLogger(com.ing.webapp.logging.Log4jListener.class);
     }
 
     public static void main(String args[]) {
@@ -50,11 +52,13 @@ public class Log4jListener implements ServletContextListener {
             System.out.println("Log4jListener: Using external log configuration in " + location.getAbsolutePath());
         } else {
             System.out.println("Log4jListener: Unable to find external log configuration defined by init-parameter \"\".");
-            System.out.println("Log4jListener: Will use default internal log configuration \"/WEB-INF/log4j.xml\".");
+            System.out.println("Log4jListener: Will use default internal log configuration \"/WEB-INF/log4j2.xml\".");
         }
-        defaultLocation = event.getServletContext().getRealPath("/WEB-INF/log4j.xml");
+
+        String defaultLocation = event.getServletContext().getRealPath("/WEB-INF/log4j2.xml");
+
         if (location != null || defaultLocation != null) {
-            configure();
+            configure(getUri(defaultLocation));
             if (location != null && location.exists()) {
                 if (log.isInfoEnabled()) {
                     System.out.println("Log4jListener: Starting background watchdog thread...");
@@ -93,17 +97,28 @@ public class Log4jListener implements ServletContextListener {
         }
     }
 
-    private void configure() {
+    private void configure(URI defaultLocation) {
+        LoggerContext context = (LoggerContext) LogManager.getContext();
+
         if (location != null && location.exists()) {
             if (location.lastModified() != lastConfigure) {
-                DOMConfigurator.configure(location.getAbsolutePath());
+                context.setConfigLocation(location.toURI());
                 log.info("Logging configured from " + location.getAbsolutePath());
                 lastConfigure = location.lastModified();
             }
         } else if (lastConfigure != 0L) {
             lastConfigure = 0L;
-            DOMConfigurator.configure(defaultLocation);
+            context.setConfigLocation(defaultLocation);
             log.info("Logging configured from " + defaultLocation + " (default)");
+        }
+    }
+
+    private URI getUri(String location) {
+        try {
+            return new URI(location);
+        } catch (URISyntaxException e) {
+            System.out.println(System.out.printf("Log4jListener: Unable to find configuration file %s!", location));
+            return null;
         }
     }
 

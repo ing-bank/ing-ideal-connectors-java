@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appenders>
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d %-5p [%t] %c - %m (%F:%M:%L)%n"/>
+        </Console>
+    </appenders>
+    <loggers>
+        <logger name="IdealConnector" level="trace" additivity="false"/>
+        <root level="info">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </loggers>
+</configuration>
