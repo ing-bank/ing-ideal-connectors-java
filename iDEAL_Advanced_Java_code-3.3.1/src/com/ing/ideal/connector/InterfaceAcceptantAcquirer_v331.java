@@ -4,7 +4,6 @@ import com.ing.ideal.connector.binding.*;
 import com.ing.ideal.connector.crypto.IDigitalSignatureHelper;
 import com.ing.ideal.connector.serializer.ISerializer;
 import com.ing.ideal.connector.util.*;
-import com.sun.org.apache.xerces.internal.jaxp.datatype.XMLGregorianCalendarImpl;
 import org.xml.sax.SAXException;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -59,8 +58,16 @@ class InterfaceAcceptantAcquirer_v331 {
         if (Util.log.isDebugEnabled())
             Util.log.debug("  Creating request object.");
         DirectoryReq req = new DirectoryReq();
-        XMLGregorianCalendar value = XMLGregorianCalendarImpl.parse(Util.encodeString(createDateTimestamp));
-        req.setCreateDateTimestamp(value);
+        DatatypeFactory dtFactory;
+        XMLGregorianCalendar newXmlGregorianCalendar = null;
+        try {
+            dtFactory = DatatypeFactory.newInstance();
+            newXmlGregorianCalendar = dtFactory.newXMLGregorianCalendar(Util.encodeString(createDateTimestamp));
+        } catch (DatatypeConfigurationException e) {
+            if (Util.log.isDebugEnabled())
+                Util.log.debug(Strings.getString(ErrorCodes.IMEXXB03, e));
+        }
+        req.setCreateDateTimestamp(newXmlGregorianCalendar);
         req.setVersion(INTERFACE_SPECIFICATION_VERSION);
         DirectoryReq.Merchant merchant = new DirectoryReq.Merchant();
         merchant.setMerchantID(Util.encodeString(merchantId));
@@ -165,7 +172,11 @@ class InterfaceAcceptantAcquirer_v331 {
         if (Util.log.isDebugEnabled())
             Util.log.debug("  Creating request object.");
         AcquirerTrxReq req = new AcquirerTrxReq();
-        req.setCreateDateTimestamp(XMLGregorianCalendarImpl.parse(Util.encodeString(createDateTimestamp)));
+        XMLGregorianCalendar newXmlGregorianCalendar = null;
+        if(dtFactory != null) {
+            newXmlGregorianCalendar = dtFactory.newXMLGregorianCalendar(Util.encodeString(createDateTimestamp));
+        }
+        req.setCreateDateTimestamp(newXmlGregorianCalendar);
         req.setVersion(Util.encodeString(INTERFACE_SPECIFICATION_VERSION));
         AcquirerTrxReq.Merchant merchant = new AcquirerTrxReq.Merchant();
         merchant.setMerchantID(Util.encodeString(merchantId));
@@ -253,9 +264,16 @@ class InterfaceAcceptantAcquirer_v331 {
         if (Util.log.isDebugEnabled())
             Util.log.debug("  Creating request object.");
         AcquirerStatusReq req = new AcquirerStatusReq();
-        XMLGregorianCalendar value = XMLGregorianCalendarImpl.parse(Util
-                .encodeString(createDateTimestamp));
-        req.setCreateDateTimestamp(value);
+        DatatypeFactory dtFactory;
+        XMLGregorianCalendar newXmlGregorianCalendar = null;
+        try {
+            dtFactory = DatatypeFactory.newInstance();
+            newXmlGregorianCalendar = dtFactory.newXMLGregorianCalendar(Util.encodeString(createDateTimestamp));
+        } catch (DatatypeConfigurationException e) {
+            if (Util.log.isDebugEnabled())
+                Util.log.debug(Strings.getString(ErrorCodes.IMEXXB03, e));
+        }
+        req.setCreateDateTimestamp(newXmlGregorianCalendar);
         req.setVersion(Util.encodeString(INTERFACE_SPECIFICATION_VERSION));
         AcquirerStatusReq.Merchant merchant = new AcquirerStatusReq.Merchant();
         merchant.setMerchantID(Util.encodeString(merchantId));
